@@ -142,6 +142,26 @@ def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: B
     arcade.draw_text(material_msg, x + width // 2, y + height - 120,
                      C.WHITE, 14, anchor_x="center")
 
+    # ===
+    # RESIGN BUTTON
+    # ===
+    resign_button_width = 100
+    resign_button_height = 40
+    resign_button_x = x + width // 2 - resign_button_width // 2
+    resign_button_y = 200  # Position above color button (which is at y=30)
+
+    # Only show resign button if game is still active
+    if not board.checkmate and not board.stalemate:
+        # Draw resign button
+        arcade.draw_lbwh_rectangle_filled(resign_button_x, resign_button_y,
+                                          resign_button_width, resign_button_height,
+                                          C.DARK_RED)
+        arcade.draw_lbwh_rectangle_outline(resign_button_x, resign_button_y,
+                                           resign_button_width, resign_button_height,
+                                           C.WHITE, 2)
+        arcade.draw_text("RESIGN", x + width // 2, resign_button_y + resign_button_height // 2,
+                        C.WHITE, 12, anchor_x="center", anchor_y="center", bold=True)
+
     # Color selection label and button
     arcade.draw_text("User plays as:", x + width // 2, y + 80,
                      C.WHITE, 14, anchor_x="center")
@@ -311,7 +331,7 @@ class GameView(arcade.View):
         @self.medium.event("on_click")
         def on_click_settings(event):
             print("MEDIUM")
-            self.bot.set_elo(800)
+            self.bot.set_elo(1000)
 
         self.hard = UIFlatButton(text="HARD", width=120, style = hard_style)
         self.hard.center_x = 980
@@ -322,8 +342,8 @@ class GameView(arcade.View):
         @self.hard.event("on_click")
         def on_click_settings(event):
             print("HARD")
-            self.bot.set_elo(1400)
-        
+            self.bot.set_elo(2000)
+
         # ================ THEME BUTTONS ======================
         #Theme change buttons
         theme_button_style = {
@@ -429,6 +449,27 @@ class GameView(arcade.View):
 
         if self.board.checkmate or self.board.stalemate:
             return
+
+        # ===
+        # RESIGN BUTTON CHECK (added)
+        # ===
+        resign_button_width = 100
+        resign_button_height = 40
+        resign_button_x = self.sidepanel_x + self.sidepanel_width // 2 - resign_button_width // 2
+        resign_button_y = 90
+
+        if (resign_button_x <= x <= resign_button_x + resign_button_width and
+                resign_button_y <= y <= resign_button_y + resign_button_height):
+            # User clicked resign button
+            self.board.resign(self.game.user_color)
+            print(f"{self.game.user_color.name} resigned. {self.board.mate_color.name} wins!")
+            return
+
+        # Check if color selection button was clicked
+        button_width = 80
+        button_height = 40
+        button_x = self.sidepanel_x + self.sidepanel_width // 2 - button_width // 2
+        button_y = 30
 
         # Check if color selection button was clicked
         button_width = 80
