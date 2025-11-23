@@ -89,10 +89,8 @@ def draw_board(board: Board, origin_x: int, origin_y: int, square: int, user_col
                 fill
             )
 
-            
 
-
-def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: Board):
+def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: Board, settings_mode: bool):
     """
     Draw the side panel with game information
 
@@ -103,108 +101,96 @@ def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: B
         height: Height of panel
         game: The Game object containing game state
         board: The Board object containing board state
+        settings_mode: Whether to show settings panel or game panel
     """
     # Background
     arcade.draw_lbwh_rectangle_filled(x, y, width, height, SIDEPANEL_BG)
 
-    # Title
-    arcade.draw_text("CHESS", x + width // 2, y + height - 40,
-                     C.WHITE, 20, anchor_x="center", bold=True)
+    # Settings button (always visible, top right) - always blue
+    settings_button_size = 35
+    settings_button_x = x + width - settings_button_size - 10
+    settings_button_y = y + height - settings_button_size - 10
 
-    # Current turn
-    if board.stalemate == False and board.checkmate == False:
-        turn_text = "White's Turn" if game.turn == Color.WHITE else "Black's Turn"
-    elif board.stalemate == True:
-        turn_text = "Stalemate!"
-    elif board.resigned:
-        turn_text = "Resignation!"
-    else: #checkmate
-        turn_text = "Checkmate!"
+    settings_color = C.ROYAL_BLUE
+    arcade.draw_lbwh_rectangle_filled(settings_button_x, settings_button_y,
+                                      settings_button_size, settings_button_size,
+                                      settings_color)
+    arcade.draw_lbwh_rectangle_outline(settings_button_x, settings_button_y,
+                                       settings_button_size, settings_button_size,
+                                       C.WHITE, 2)
+    arcade.draw_text("⚙", x + width - settings_button_size // 2 - 10,
+                     y + height - settings_button_size // 2 - 10,
+                     C.WHITE, 20, anchor_x="center", anchor_y="center")
 
-    arcade.draw_text(turn_text, x + width // 2, y + height - 80,
-                     C.WHITE, 16, anchor_x="center")
-
-    material_diff = board.material_differential
-    if board.checkmate == False and board.stalemate == False:
-        if material_diff > 0:
-            material_msg = f"White + {material_diff}"
-        elif material_diff < 0:
-            material_msg = f"Black + {abs(material_diff)}"
+    if not settings_mode:
+        # Current turn / game status
+        if board.stalemate == False and board.checkmate == False:
+            turn_text = "White's Turn" if game.turn == Color.WHITE else "Black's Turn"
+        elif board.stalemate == True:
+            turn_text = "Stalemate!"
+        elif board.resigned:
+            turn_text = "Resignation!"
         else:
-            material_msg = f"Even Material"
-    elif board.checkmate == True:
-        if board.mate_color == Color.WHITE:
-            material_msg = f"White Wins!"
+            turn_text = "Checkmate!"
+
+        arcade.draw_text(turn_text, x + width // 2, y + height - 100,
+                         C.WHITE, 16, anchor_x="center")
+
+        # Material differential / game result
+        material_diff = board.material_differential
+        if board.checkmate == False and board.stalemate == False:
+            if material_diff > 0:
+                material_msg = f"White + {material_diff}"
+            elif material_diff < 0:
+                material_msg = f"Black + {abs(material_diff)}"
+            else:
+                material_msg = f"Even Material"
+        elif board.checkmate == True:
+            if board.mate_color == Color.WHITE:
+                material_msg = f"White Wins!"
+            else:
+                material_msg = f"Black Wins!"
         else:
-            material_msg = f"Black Wins!"
+            material_msg = f"Draw :/"
+
+        arcade.draw_text(material_msg, x + width // 2, y + height - 140,
+                         C.WHITE, 14, anchor_x="center")
+
+        # Resign button OR New Game button (same position)
+        button_width = 100
+        button_height = 40
+        button_x = x + width // 2 - button_width // 2
+        button_y = 200
+
+        if board.checkmate or board.stalemate or board.resigned:
+            # NEW GAME BUTTON
+            arcade.draw_lbwh_rectangle_filled(button_x, button_y,
+                                              button_width, button_height,
+                                              C.DARK_GREEN)
+            arcade.draw_lbwh_rectangle_outline(button_x, button_y,
+                                               button_width, button_height,
+                                               C.WHITE, 2)
+            arcade.draw_text("NEW GAME", x + width // 2, button_y + button_height // 2,
+                            C.WHITE, 11, anchor_x="center", anchor_y="center", bold=True)
+        else:
+            # RESIGN BUTTON
+            arcade.draw_lbwh_rectangle_filled(button_x, button_y,
+                                              button_width, button_height,
+                                              C.DARK_RED)
+            arcade.draw_lbwh_rectangle_outline(button_x, button_y,
+                                               button_width, button_height,
+                                               C.WHITE, 2)
+            arcade.draw_text("RESIGN", x + width // 2, button_y + button_height // 2,
+                            C.WHITE, 12, anchor_x="center", anchor_y="center", bold=True)
+
+        # Color selection label (button is managed by UIManager)
+        arcade.draw_text("User plays as:", x + width // 2, y + 80,
+                         C.WHITE, 14, anchor_x="center")
+
     else:
-        #Stalemate
-        material_msg = f"Draw :/"
-
-    arcade.draw_text(material_msg, x + width // 2, y + height - 120,
-                     C.WHITE, 14, anchor_x="center")
-
-    if board.checkmate or board.stalemate or board.resigned:
-        new_game_button_width = 120
-        new_game_button_height = 45
-        new_game_button_x = x + width // 2 - new_game_button_width // 2
-        new_game_button_y = 230
-
-        arcade.draw_lbwh_rectangle_filled(new_game_button_x, new_game_button_y,
-                                          new_game_button_width, new_game_button_height,
-                                          C.DARK_GREEN)
-        arcade.draw_lbwh_rectangle_outline(new_game_button_x, new_game_button_y,
-                                           new_game_button_width, new_game_button_height,
-                                           C.WHITE, 3)
-        arcade.draw_text("NEW GAME", x + width // 2, new_game_button_y + new_game_button_height // 2,
-                         C.WHITE, 14, anchor_x="center", anchor_y="center", bold=True)
-    # ===
-    # RESIGN BUTTON
-    # ===
-    resign_button_width = 100
-    resign_button_height = 40
-    resign_button_x = x + width // 2 - resign_button_width // 2
-    resign_button_y = 200  # Position above color button (which is at y=30)
-
-    # Only show resign button if game is still active
-    if not board.checkmate and not board.stalemate:
-        # Draw resign button
-        arcade.draw_lbwh_rectangle_filled(resign_button_x, resign_button_y,
-                                          resign_button_width, resign_button_height,
-                                          C.DARK_RED)
-        arcade.draw_lbwh_rectangle_outline(resign_button_x, resign_button_y,
-                                           resign_button_width, resign_button_height,
-                                           C.WHITE, 2)
-        arcade.draw_text("RESIGN", x + width // 2, resign_button_y + resign_button_height // 2,
-                        C.WHITE, 12, anchor_x="center", anchor_y="center", bold=True)
-
-    # Color selection label and button
-    arcade.draw_text("User plays as:", x + width // 2, y + 80,
-                     C.WHITE, 14, anchor_x="center")
-
-    # Button dimensions
-    button_width = 80
-    button_height = 40
-    button_x = x + width // 2 - button_width // 2
-    button_y = y + 30
-
-    # Button color based on user selection
-    if game.user_color == Color.WHITE:
-        button_fill = C.WHITE
-        button_text_color = C.BLACK
-        button_text = "WHITE"
-    else:
-        button_fill = C.BLACK
-        button_text_color = C.WHITE
-        button_text = "BLACK"
-
-    # Draw button
-    arcade.draw_lbwh_rectangle_filled(button_x, button_y, button_width, button_height, button_fill)
-    arcade.draw_lbwh_rectangle_outline(button_x, button_y, button_width, button_height, C.GRAY, 2)
-    arcade.draw_text(button_text, x + width // 2, button_y + button_height // 2,
-                     button_text_color, 12, anchor_x="center", anchor_y="center", bold=True)
-    
-
+        # settings panel
+        arcade.draw_text("SETTINGS", x + width // 2, y + height - 100,
+                         C.WHITE, 18, anchor_x="center", bold=True)
 
 
 class GameView(arcade.View):
@@ -230,8 +216,10 @@ class GameView(arcade.View):
                                     display_warp = Vec2(0.0, 0.0),
                                     mask_dark=0.5,
                                     mask_light=1.2)
-        
+
         self.filter_on = False
+        self.settings_mode = False  # Track if settings panel is open
+        self.current_difficulty = "MEDIUM"  # Track selected difficulty
 
         arcade.set_background_color(C.CADET_BLUE)
         self.window.set_caption(title)
@@ -269,89 +257,82 @@ class GameView(arcade.View):
         self.manager = UIManager()
         self.manager.enable()
 
-
         # Difficulty Buttons
         easy_style = {
-            # You should provide a style for each widget state
             "normal": UIFlatButton.UIStyle(
-                bg=arcade.color.APPLE_GREEN,
-                font_color=arcade.color.BLACK),  # use default values for `normal` state
+                bg=arcade.color.DARK_GRAY,
+                font_color=(0, 150, 0),  # Darker green
+                border=(60, 60, 60),
+                border_width=2),
             "hover": UIFlatButton.UIStyle(
-                font_color=arcade.color.BLACK,
-                bg=arcade.color.AO,
-            ),
-            "press": UIFlatButton.UIStyle(
-                font_color=arcade.color.BLACK,
-                bg=arcade.color.WHITE,
-                border=arcade.color.WHITE,
-            ),
-            "disabled": UIFlatButton.UIStyle(
+                font_color=(0, 150, 0),  # Darker green
                 bg=arcade.color.GRAY,
-            )
+                border=(60, 60, 60),
+                border_width=2),
+            "press": UIFlatButton.UIStyle(
+                font_color=(0, 150, 0),  # Darker green
+                bg=arcade.color.LIGHT_GRAY,
+                border=(60, 60, 60),
+                border_width=2),
         }
         medium_style = {
-            # You should provide a style for each widget state
             "normal": UIFlatButton.UIStyle(
-                bg=arcade.color.AUREOLIN,
-                font_color=arcade.color.BLACK),  # use default values for `normal` state
+                bg=arcade.color.DARK_GRAY,
+                font_color=(200, 100, 0),  # Darker orange
+                border=(60, 60, 60),
+                border_width=2),
             "hover": UIFlatButton.UIStyle(
-                font_color=arcade.color.BLACK,
-                bg=arcade.color.AMBER,
-            ),
-            "press": UIFlatButton.UIStyle(
-                font_color=arcade.color.BLACK,
-                bg=arcade.color.WHITE,
-                border=arcade.color.WHITE,
-            ),
-            "disabled": UIFlatButton.UIStyle(
+                font_color=(200, 100, 0),  # Darker orange
                 bg=arcade.color.GRAY,
-            )
+                border=(60, 60, 60),
+                border_width=2),
+            "press": UIFlatButton.UIStyle(
+                font_color=(200, 100, 0),  # Darker orange
+                bg=arcade.color.LIGHT_GRAY,
+                border=(60, 60, 60),
+                border_width=2),
         }
         hard_style = {
-            # You should provide a style for each widget state
             "normal": UIFlatButton.UIStyle(
-                bg=arcade.color.AMERICAN_ROSE,
-                font_color=arcade.color.BLACK),  # use default values for `normal` state
+                bg=arcade.color.DARK_GRAY,
+                font_color=(180, 0, 0),  # Darker red
+                border=(60, 60, 60),
+                border_width=2),
             "hover": UIFlatButton.UIStyle(
-                font_color=arcade.color.BLACK,
-                bg=arcade.color.ALABAMA_CRIMSON,
-            ),
-            "press": UIFlatButton.UIStyle(
-                font_color=arcade.color.BLACK,
-                bg=arcade.color.WHITE,
-                border=arcade.color.WHITE,
-            ),
-            "disabled": UIFlatButton.UIStyle(
+                font_color=(180, 0, 0),  # Darker red
                 bg=arcade.color.GRAY,
-            )
+                border=(60, 60, 60),
+                border_width=2),
+            "press": UIFlatButton.UIStyle(
+                font_color=(180, 0, 0),  # Darker red
+                bg=arcade.color.LIGHT_GRAY,
+                border=(60, 60, 60),
+                border_width=2),
         }
         self.easy = UIFlatButton(text="EASY", width=120,style=easy_style)
         self.easy.center_x = 980
-
-
-
-        self.easy.center_y = 650
+        self.easy.center_y = 670
         self.manager.add(self.easy)
 
         @self.easy.event("on_click")
         def on_click_settings(event):
             print("EASY")
             self.bot.set_elo(400)
+            self.current_difficulty = "EASY"
 
         self.medium = UIFlatButton(text="MEDIUM", width=120, style = medium_style)
         self.medium.center_x = 980
-
-        self.medium.center_y = 600
+        self.medium.center_y = 610
         self.manager.add(self.medium)
 
         @self.medium.event("on_click")
         def on_click_settings(event):
             print("MEDIUM")
             self.bot.set_elo(1000)
+            self.current_difficulty = "MEDIUM"
 
         self.hard = UIFlatButton(text="HARD", width=120, style = hard_style)
         self.hard.center_x = 980
-
         self.hard.center_y = 550
         self.manager.add(self.hard)
 
@@ -359,19 +340,31 @@ class GameView(arcade.View):
         def on_click_settings(event):
             print("HARD")
             self.bot.set_elo(2000)
+            self.current_difficulty = "HARD"
 
         # ================ THEME BUTTONS ======================
-        #Theme change buttons
         theme_button_style = {
-            "normal": UIFlatButton.UIStyle(bg = arcade.color.ROYAL_BLUE, font_color=arcade.color.WHITE),
-            "hover": UIFlatButton.UIStyle(bg = arcade.color.BLUE_BELL, font_color=arcade.color.WHITE),
-            "press": UIFlatButton.UIStyle(bg = arcade.color.NAVY_BLUE, font_color=arcade.color.WHITE),
+            "normal": UIFlatButton.UIStyle(
+                bg=arcade.color.DARK_GRAY,
+                font_color=arcade.color.BLACK,
+                border=(60, 60, 60),
+                border_width=2),
+            "hover": UIFlatButton.UIStyle(
+                bg=arcade.color.GRAY,
+                font_color=arcade.color.BLACK,
+                border=(60, 60, 60),
+                border_width=2),
+            "press": UIFlatButton.UIStyle(
+                bg=arcade.color.LIGHT_GRAY,
+                font_color=arcade.color.BLACK,
+                border=(60, 60, 60),
+                border_width=2),
         }
 
-        #White theme button
+        # White theme button
         self.white_theme_button = UIFlatButton(text="Change WHITE Theme", width=180, style=theme_button_style)
         self.white_theme_button.center_x = 980
-        self.white_theme_button.center_y = 480
+        self.white_theme_button.center_y = 460
         self.manager.add(self.white_theme_button)
 
         @self.white_theme_button.event("on_click")
@@ -379,11 +372,11 @@ class GameView(arcade.View):
             print("Changing WHITE Theme")
             self.sheet.next_white_theme()
             self.sprites.build_from_board(self.board, self.square, self.origin_x, self.origin_y, self.game.user_color)
-        
-        #Black theme button
+
+        # Black theme button
         self.black_theme_button = UIFlatButton(text="Change BLACK Theme", width=180, style=theme_button_style)
         self.black_theme_button.center_x = 980
-        self.black_theme_button.center_y = 430
+        self.black_theme_button.center_y = 400
         self.manager.add(self.black_theme_button)
 
         @self.black_theme_button.event("on_click")
@@ -392,6 +385,82 @@ class GameView(arcade.View):
             self.sheet.next_black_theme()
             self.sprites.build_from_board(self.board, self.square, self.origin_x, self.origin_y, self.game.user_color)
 
+        # ================ COLOR SELECTION BUTTON ======================
+        self.color_button_style_white = {
+            "normal": UIFlatButton.UIStyle(
+                bg=arcade.color.WHITE,
+                font_color=arcade.color.BLACK,
+                border=(128, 128, 128),
+                border_width=2),
+            "hover": UIFlatButton.UIStyle(
+                bg=arcade.color.LIGHT_GRAY,
+                font_color=arcade.color.BLACK,
+                border=(128, 128, 128),
+                border_width=2),
+            "press": UIFlatButton.UIStyle(
+                bg=arcade.color.GRAY,
+                font_color=arcade.color.BLACK,
+                border=(128, 128, 128),
+                border_width=2),
+        }
+
+        self.color_button_style_black = {
+            "normal": UIFlatButton.UIStyle(
+                bg=arcade.color.BLACK,
+                font_color=arcade.color.WHITE,
+                border=(128, 128, 128),
+                border_width=2),
+            "hover": UIFlatButton.UIStyle(
+                bg=arcade.color.LIGHT_GRAY,
+                font_color=arcade.color.WHITE,
+                border=(128, 128, 128),
+                border_width=2),
+            "press": UIFlatButton.UIStyle(
+                bg=arcade.color.GRAY,
+                font_color=arcade.color.WHITE,
+                border=(128, 128, 128),
+                border_width=2),
+        }
+
+        # Color selection button
+        self.color_button = UIFlatButton(text="WHITE", width=80, style=self.color_button_style_white)
+        self.color_button.center_x = 980
+        self.color_button.center_y = 50
+        self.manager.add(self.color_button)
+
+        @self.color_button.event("on_click")
+        def _toggle_color(event):
+            # Toggle user color
+            self.game.user_color = Color.BLACK if self.game.user_color == Color.WHITE else Color.WHITE
+
+            # Update button text and style
+            if self.game.user_color == Color.WHITE:
+                self.color_button.text = "WHITE"
+                self.color_button.style = self.color_button_style_white
+            else:
+                self.color_button.text = "BLACK"
+                self.color_button.style = self.color_button_style_black
+
+            # Reset the game
+            self.board.reset_board()
+            self.game.turn = Color.WHITE
+            self.game_started = False
+            self.sprites.build_from_board(
+                self.board, self.square, self.origin_x, self.origin_y, self.game.user_color
+            )
+
+            # If user chose black, bot makes first move
+            if self.game.user_color == Color.BLACK:
+                self.make_bot_move()
+                self.game.turn = self.game.user_color
+                self.game_started = True
+
+        # Hide all settings buttons initially
+        self.easy.visible = False
+        self.medium.visible = False
+        self.hard.visible = False
+        self.white_theme_button.visible = False
+        self.black_theme_button.visible = False
 
 
     def screen_to_board_coords(self, visual_file: int, visual_rank: int) -> tuple[int, int]:
@@ -422,6 +491,14 @@ class GameView(arcade.View):
             return (7 - board_file, 7 - board_rank)
         return (board_file, board_rank)
 
+    def on_show_view(self):
+        """Called when this view is shown - ensures buttons are hidden on startup"""
+        self.easy.visible = False
+        self.medium.visible = False
+        self.hard.visible = False
+        self.white_theme_button.visible = False
+        self.black_theme_button.visible = False
+
     def on_draw(self):
         if self.filter_on:
                 # Draw our stuff into the CRT filter
@@ -432,7 +509,7 @@ class GameView(arcade.View):
                 draw_board(self.board, self.origin_x, self.origin_y, self.square, self.game.user_color)
                 self.sprites.draw()
                 draw_sidepanel(self.sidepanel_x, 0, self.sidepanel_width,
-                            self.window.height, self.game, self.board)
+                            self.window.height, self.game, self.board, self.settings_mode)
                 self.manager.draw()
 
                 self.window.use()
@@ -441,12 +518,12 @@ class GameView(arcade.View):
 
                 # draw stretched
                 self.crt_filter.draw()
-                
+
         else:
             self.clear()
             draw_board(self.board, self.origin_x, self.origin_y, self.square, self.game.user_color)
             self.sprites.draw()
-            draw_sidepanel(self.sidepanel_x, 0, self.sidepanel_width, self.window.height, self.game, self.board)
+            draw_sidepanel(self.sidepanel_x, 0, self.sidepanel_width, self.window.height, self.game, self.board, self.settings_mode)
             self.manager.draw()
 
     def on_mouse_press(self, x, y, button, modifiers):
@@ -460,77 +537,62 @@ class GameView(arcade.View):
             key_modifiers: Active keyboard modifiers
         """
 
-        # ===
-        # NEW GAME BUTTON CHECK (check this FIRST, before the return)
-        # ===
-        if self.board.checkmate or self.board.stalemate or self.board.resigned:
-            new_game_button_width = 120
-            new_game_button_height = 45
-            new_game_button_x = self.sidepanel_x + self.sidepanel_width // 2 - new_game_button_width // 2
-            new_game_button_y = 230
+        # Settings button
+        settings_button_size = 35
+        settings_button_x = self.sidepanel_x + self.sidepanel_width - settings_button_size - 10
+        settings_button_y = self.window.height - settings_button_size - 10
 
-            if (new_game_button_x <= x <= new_game_button_x + new_game_button_width and
-                    new_game_button_y <= y <= new_game_button_y + new_game_button_height):
-                # User clicked new game button - reset everything
+        if (settings_button_x <= x <= settings_button_x + settings_button_size and
+            settings_button_y <= y <= settings_button_y + settings_button_size):
+            # Toggle settings mode
+            self.settings_mode = not self.settings_mode
+
+            # Show/hide settings buttons
+            self.easy.visible = self.settings_mode
+            self.medium.visible = self.settings_mode
+            self.hard.visible = self.settings_mode
+            self.white_theme_button.visible = self.settings_mode
+            self.black_theme_button.visible = self.settings_mode
+
+            return
+
+        # Don't process game clicks if in settings mode
+        if self.settings_mode:
+            return
+
+        # Resign button
+        button_width = 100
+        button_height = 40
+        action_button_x = self.sidepanel_x + self.sidepanel_width // 2 - button_width // 2
+        action_button_y = 200
+
+        if (action_button_x <= x <= action_button_x + button_width and
+            action_button_y <= y <= action_button_y + button_height):
+
+            if self.board.checkmate or self.board.stalemate or self.board.resigned:
+                # NEW GAME clicked
                 self.board.reset_board()
                 self.game.turn = Color.WHITE
                 self.game_started = False
 
-                # Rebuild sprites for new game
                 self.sprites.build_from_board(
                     self.board, self.square, self.origin_x, self.origin_y, self.game.user_color
                 )
 
-                # If user is playing black, bot makes first move
                 if self.game.user_color == Color.BLACK:
                     self.make_bot_move()
                     self.game.turn = self.game.user_color
                     self.game_started = True
 
                 print("New game started!")
-                return
+            else:
+                # RESIGN clicked
+                self.board.resign(self.game.user_color)
+                print(f"{self.game.user_color.name} resigned. {self.board.mate_color.name} wins!")
+
+            return
 
         if self.board.checkmate or self.board.stalemate or self.board.resigned:
-            return
-
-        # ===
-        # RESIGN BUTTON CHECK - Fixed y coordinate to match draw position
-        # ===
-        resign_button_width = 100
-        resign_button_height = 40
-        resign_button_x = self.sidepanel_x + self.sidepanel_width // 2 - resign_button_width // 2
-        resign_button_y = 200  # Changed from 90 to 200 to match draw_sidepanel()
-
-        if (resign_button_x <= x <= resign_button_x + resign_button_width and
-                resign_button_y <= y <= resign_button_y + resign_button_height):
-            # User clicked resign button
-            self.board.resign(self.game.user_color)
-            print(f"{self.game.user_color.name} resigned. {self.board.mate_color.name} wins!")
-            return
-
-        # Check if color selection button was clicked
-        button_width = 80
-        button_height = 40
-        button_x = self.sidepanel_x + self.sidepanel_width // 2 - button_width // 2
-        button_y = 30
-
-        if (button_x <= x <= button_x + button_width and
-                button_y <= y <= button_y + button_height):
-            # Toggle user color
-            self.game.user_color = Color.BLACK if self.game.user_color == Color.WHITE else Color.WHITE
-            # Reset the game
-            self.board = Board()
-            self.game.turn = Color.WHITE
-            self.game_started = False
-            self.sprites.build_from_board(
-                self.board, self.square, self.origin_x, self.origin_y, self.game.user_color
-            )
-
-            # If user chose black, bot makes first move
-            if self.game.user_color == Color.BLACK:
-                self.make_bot_move()
-                self.game.turn = self.game.user_color
-                self.game_started = True
             return
 
         if button == arcade.MOUSE_BUTTON_LEFT:
@@ -553,32 +615,32 @@ class GameView(arcade.View):
                     self.board.get_piece(tile.piece_here)
                     self.board.highlight_moves()
 
-                    # Check if checkmate or stalemate
+                    #Check if checkmate or stalemate
                     piece = tile.get_piece_here()
                     if piece.piece_type == PieceType.KING:
                         king_moves = self.board.get_all_legal(piece)
                         if len(king_moves) == 0:
 
-                            # Check if anyone has moves
+                            #Check if anyone has moves
                             all_moves = self.board.get_all_moves(self.game.user_color)
                             if len(all_moves) == 0:
 
-                                # Checkmate or stalemate
+                                #Checkmate or stalemate
                                 enemy_moves = self.board.get_all_enemy_moves(self.game.user_color)
 
-                                if piece.current_pos in enemy_moves:  # Checkmate
+                                if piece.current_pos in enemy_moves: #Checkmate
                                     print(f"{self.game.user_color.name} is in CHECKMATE")
                                     self.board.set_checkmate()
                                     self.board.set_mate_color(self.game.user_color.opposite())
                                     return
 
                                 else:
-                                    # Stalemate
+                                    #Stalemate
                                     print(f"{self.game.user_color.name} is in STALEMATE")
                                     self.board.set_stalemate()
                                     return
 
-                    # Check for draws
+                    #Check for draws
                     if self.board.check_draw():
                         print(f"Stalemate")
                         self.board.set_stalemate()
