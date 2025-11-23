@@ -116,6 +116,8 @@ def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: B
         turn_text = "White's Turn" if game.turn == Color.WHITE else "Black's Turn"
     elif board.stalemate == True:
         turn_text = "Stalemate!"
+    elif board.resigned:
+        turn_text = "Resignation!"
     else: #checkmate
         turn_text = "Checkmate!"
 
@@ -142,6 +144,20 @@ def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: B
     arcade.draw_text(material_msg, x + width // 2, y + height - 120,
                      C.WHITE, 14, anchor_x="center")
 
+    if board.checkmate or board.stalemate or board.resigned:
+        new_game_button_width = 120
+        new_game_button_height = 45
+        new_game_button_x = x + width // 2 - new_game_button_width // 2
+        new_game_button_y = 230
+
+        arcade.draw_lbwh_rectangle_filled(new_game_button_x, new_game_button_y,
+                                          new_game_button_width, new_game_button_height,
+                                          C.DARK_GREEN)
+        arcade.draw_lbwh_rectangle_outline(new_game_button_x, new_game_button_y,
+                                           new_game_button_width, new_game_button_height,
+                                           C.WHITE, 3)
+        arcade.draw_text("NEW GAME", x + width // 2, new_game_button_y + new_game_button_height // 2,
+                         C.WHITE, 14, anchor_x="center", anchor_y="center", bold=True)
     # ===
     # RESIGN BUTTON
     # ===
@@ -433,9 +449,6 @@ class GameView(arcade.View):
             draw_sidepanel(self.sidepanel_x, 0, self.sidepanel_width, self.window.height, self.game, self.board)
             self.manager.draw()
 
-
-
-
     def on_mouse_press(self, x, y, button, modifiers):
         """
         Handle mouse button press events
@@ -447,16 +460,46 @@ class GameView(arcade.View):
             key_modifiers: Active keyboard modifiers
         """
 
-        if self.board.checkmate or self.board.stalemate:
+        # ===
+        # NEW GAME BUTTON CHECK (check this FIRST, before the return)
+        # ===
+        if self.board.checkmate or self.board.stalemate or self.board.resigned:
+            new_game_button_width = 120
+            new_game_button_height = 45
+            new_game_button_x = self.sidepanel_x + self.sidepanel_width // 2 - new_game_button_width // 2
+            new_game_button_y = 230
+
+            if (new_game_button_x <= x <= new_game_button_x + new_game_button_width and
+                    new_game_button_y <= y <= new_game_button_y + new_game_button_height):
+                # User clicked new game button - reset everything
+                self.board.reset_board()
+                self.game.turn = Color.WHITE
+                self.game_started = False
+
+                # Rebuild sprites for new game
+                self.sprites.build_from_board(
+                    self.board, self.square, self.origin_x, self.origin_y, self.game.user_color
+                )
+
+                # If user is playing black, bot makes first move
+                if self.game.user_color == Color.BLACK:
+                    self.make_bot_move()
+                    self.game.turn = self.game.user_color
+                    self.game_started = True
+
+                print("New game started!")
+                return
+
+        if self.board.checkmate or self.board.stalemate or self.board.resigned:
             return
 
         # ===
-        # RESIGN BUTTON CHECK (added)
+        # RESIGN BUTTON CHECK - Fixed y coordinate to match draw position
         # ===
         resign_button_width = 100
         resign_button_height = 40
         resign_button_x = self.sidepanel_x + self.sidepanel_width // 2 - resign_button_width // 2
-        resign_button_y = 90
+        resign_button_y = 200  # Changed from 90 to 200 to match draw_sidepanel()
 
         if (resign_button_x <= x <= resign_button_x + resign_button_width and
                 resign_button_y <= y <= resign_button_y + resign_button_height):
@@ -471,19 +514,13 @@ class GameView(arcade.View):
         button_x = self.sidepanel_x + self.sidepanel_width // 2 - button_width // 2
         button_y = 30
 
-        # Check if color selection button was clicked
-        button_width = 80
-        button_height = 40
-        button_x = self.sidepanel_x + self.sidepanel_width // 2 - button_width // 2
-        button_y = 30
-
         if (button_x <= x <= button_x + button_width and
-            button_y <= y <= button_y + button_height):
+                button_y <= y <= button_y + button_height):
             # Toggle user color
             self.game.user_color = Color.BLACK if self.game.user_color == Color.WHITE else Color.WHITE
             # Reset the game
             self.board = Board()
-            self.game.turn = Color.WHITE  # Fixed: Use Color.WHITE enum, not C.WHITE
+            self.game.turn = Color.WHITE
             self.game_started = False
             self.sprites.build_from_board(
                 self.board, self.square, self.origin_x, self.origin_y, self.game.user_color
@@ -492,7 +529,7 @@ class GameView(arcade.View):
             # If user chose black, bot makes first move
             if self.game.user_color == Color.BLACK:
                 self.make_bot_move()
-                self.game.turn = self.game.user_color  # Set turn to user (BLACK)
+                self.game.turn = self.game.user_color
                 self.game_started = True
             return
 
@@ -516,32 +553,32 @@ class GameView(arcade.View):
                     self.board.get_piece(tile.piece_here)
                     self.board.highlight_moves()
 
-                    #Check if checkmate or stalemate
+                    # Check if checkmate or stalemate
                     piece = tile.get_piece_here()
                     if piece.piece_type == PieceType.KING:
                         king_moves = self.board.get_all_legal(piece)
                         if len(king_moves) == 0:
 
-                            #Check if anyone has moves
+                            # Check if anyone has moves
                             all_moves = self.board.get_all_moves(self.game.user_color)
                             if len(all_moves) == 0:
 
-                                #Checkmate or stalemate
+                                # Checkmate or stalemate
                                 enemy_moves = self.board.get_all_enemy_moves(self.game.user_color)
 
-                                if piece.current_pos in enemy_moves: #Checkmate
+                                if piece.current_pos in enemy_moves:  # Checkmate
                                     print(f"{self.game.user_color.name} is in CHECKMATE")
                                     self.board.set_checkmate()
                                     self.board.set_mate_color(self.game.user_color.opposite())
                                     return
 
                                 else:
-                                    #Stalemate
+                                    # Stalemate
                                     print(f"{self.game.user_color.name} is in STALEMATE")
                                     self.board.set_stalemate()
                                     return
-                    
-                    #Check for draws
+
+                    # Check for draws
                     if self.board.check_draw():
                         print(f"Stalemate")
                         self.board.set_stalemate()

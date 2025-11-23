@@ -32,6 +32,7 @@ class Board:
         self.checkmate = False
         self.stalemate = False
         self.mate_color = None
+        self.resigned = False
 
         # assign tile objects to None lists
         for rank in range(8):
@@ -415,6 +416,7 @@ class Board:
         Args:
             resigning_color: The color of the player who is resigning
         """
+        self.resigned = True
         self.checkmate = True
         # Winner is the opposite color
         self.mate_color = resigning_color.opposite()
@@ -440,6 +442,7 @@ class Board:
         self.checkmate = False
         self.stalemate = False
         self.mate_color = None
+        self.resigned = False
 
         # reinitialize pieces to starting positions
         self.initialize_pieces()
