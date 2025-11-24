@@ -26,6 +26,7 @@ HIGHLIGHT_SQ = (118, 150, 86)
 PREV_SQ = (125, 135, 150)
 SIDEPANEL_BG = (50, 50, 50)
 CLICK_SQ = (255, 165, 0)
+CHECK_SQ = (220, 20, 20)
 
 
 def draw_board(board: Board, origin_x: int, origin_y: int, square: int,
@@ -77,6 +78,9 @@ def draw_board(board: Board, origin_x: int, origin_y: int, square: int,
                 #arcade.draw_lbwh_rectangle_filled(x, y, square, square,
                 #                                  CLICK_SQ)
                 alt = CLICK_SQ
+
+            if board.grid[rank][file].in_check:
+                alt = CHECK_SQ
 
             arcade.draw_lbwh_rectangle_filled(x, y, square, square, fill)
 
@@ -786,6 +790,13 @@ class GameView(arcade.View):
             # Highlight the bot's move (from and to squares)
             self.board.grid[from_pos[0]][from_pos[1]].prev_move()
             self.board.grid[to_pos[0]][to_pos[1]].prev_move()
+
+            # Clear and update check indicators
+            self.board.remove_check_indicators()
+            # Check if user's king is in check after bot's move
+            self.board.highlight_king_in_check(self.game.user_color)
+            # Check if bot's king is somehow in check
+            self.board.highlight_king_in_check(bot_color)
         return None
 
     def get_tile_from_mouse(self, x, y):
@@ -987,6 +998,11 @@ class GameView(arcade.View):
                                          self.origin_x, self.origin_y,
                                          self.game.user_color)
 
+            # Update check indicators for both colors
+            self.board.remove_check_indicators()
+            self.board.highlight_king_in_check(Color.WHITE)
+            self.board.highlight_king_in_check(Color.BLACK)
+
     def show_next_move(self):
         ''' Goes forward one move in history '''
         if self.board.current_index < len(self.board.move_history) - 1:
@@ -996,3 +1012,8 @@ class GameView(arcade.View):
             self.sprites.build_from_board(self.board, self.square,
                                          self.origin_x, self.origin_y,
                                          self.game.user_color)
+
+            # Update check indicators for both colors
+            self.board.remove_check_indicators()
+            self.board.highlight_king_in_check(Color.WHITE)
+            self.board.highlight_king_in_check(Color.BLACK)

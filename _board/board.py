@@ -169,8 +169,18 @@ class Board:
         enemy_color = (Color.BLACK if piece.color == Color.WHITE
                       else Color.WHITE)
 
+        # Clear all check indicators first
+        self.remove_check_indicators()
+
+        # Check and highlight if either king is in check
         if self.check_for_checks(enemy_color):
             print(f"{enemy_color.name} is in check!")
+            self.highlight_king_in_check(enemy_color)
+
+        # Also check if the current player's king is somehow in check
+        # (shouldn't happen with legal moves, but good for debugging)
+        if self.check_for_checks(piece.color):
+            self.highlight_king_in_check(piece.color)
 
         print(f"{piece.color} {piece.piece_type} moved from "
               f"{before_move} to {(file, rank)}")
@@ -224,6 +234,24 @@ class Board:
         for rank in range(8):
             for file in range(8):
                 self.grid[rank][file].clear_prev()
+
+    def remove_check_indicators(self):
+        """Remove all check indicators from the board"""
+        for rank in range(8):
+            for file in range(8):
+                self.grid[rank][file].clear_check()
+
+    def highlight_king_in_check(self, color: Color):
+        """
+        Highlight the king of the specified color if it's in check
+
+        Args:
+            color: The color of the king to check and highlight
+        """
+        if self.check_for_checks(color):
+            king_pos = self.find_king(color)
+            if king_pos:
+                self.grid[king_pos[1]][king_pos[0]].set_check()
 
     def get_all_moves(self, color: Color):
         """
@@ -456,6 +484,9 @@ class Board:
         self.mate_color = None
         self.resigned = False
 
+        # Clear all visual indicators
+        self.remove_check_indicators()
+
         # reinitialize pieces to starting positions
         self.initialize_pieces()
         print("Board reset to starting position")
@@ -635,6 +666,9 @@ class Board:
 
         #Calculate previous material difference
         self.material_differential = self.calculate_material()
+
+        # Clear check indicators when loading a position
+        self.remove_check_indicators()
 
     def on_mouse_release(self, x: float, y: float, button: int,
                         modifiers: int):

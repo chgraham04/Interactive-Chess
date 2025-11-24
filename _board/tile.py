@@ -25,6 +25,7 @@ class Tile:
     highlighted: bool = False
     prev: bool = False
     clicked: bool = False
+    in_check: bool = False
 
     def has_piece(self) -> bool:
         """
@@ -80,6 +81,14 @@ class Tile:
     def clear_click(self):
         """Remove clicked marking from this tile"""
         self.clicked = False
+
+    def set_check(self):
+        """Mark this tile as containing a king in check"""
+        self.in_check = True
+
+    def clear_check(self):
+        """Remove check marking from this tile"""
+        self.in_check = False
 
     def get_piece_here(self):
         """
