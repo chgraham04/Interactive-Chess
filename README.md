@@ -16,6 +16,6 @@ The game will continue until checkmate or a draw is reached, or until the user r
 - To adjust sprite appearance, navigate to the settings menu and use the buttons to cycle through the available themes. 
 
 ### Bot Difficulty
-- TO adjust bot difficulty, navigate to the settings menu and select either easy (400), medium (1200), or hard (2000).
+- To adjust bot difficulty, navigate to the settings menu and select either easy (400), medium (1200), or hard (2000).
 
 
