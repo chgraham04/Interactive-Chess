@@ -1,15 +1,16 @@
 # Interactive Chess Game
 
-Prior to running project:
+### Prior to running project:
 - Install all requirements using ```pip install -r requirements.txt``` or individually by installing arcade and stockfish via pip.
 
 To run the project, simply run main.py. The program will take a minute to open upon first execution 
 due to the install time of the Stockfish engine. 
 
 ### Gameplay
-Upon starting, click a piece to show all legal moves as green tiles. Drag the piece to one of these tiles to move it. 
+Upon starting, click a piece to show all legal moves as green tiles. Drag the piece to one of these tiles to move it.
+The game will continue until checkmate or a draw is reached, or until the user resigns (using resign button). 
 
-The game will continue until checkmate or a draw is reached, or until the user resigns. 
+Users may play with the white or black pieces by changing sides using the button before the game begins. 
 
 
 ### Visual Customization
