@@ -2,25 +2,25 @@
 GUI view module
 Contains the GameView class which handles rendering and user interaction
 """
-import arcade
 import time
+import arcade
 from arcade import color as C
-from _board.board import Board
-from _enums.color import Color
-from _enums.piece_type import PieceType
-from _assets.spritesheet import Spritesheet, ChessSprites
-from _game.game import Game
-from _bot.bot import Bot
 from pyglet.math import Vec2
 from arcade.experimental.crt_filter import CRTFilter
 import arcade.gui
 import arcade.gui.widgets.layout
 import arcade.gui.widgets.buttons
 from arcade.gui import UIManager, UIFlatButton
+from _board.board import Board
+from _enums.color import Color
+from _enums.piece_type import PieceType
+from _assets.spritesheet import Spritesheet, ChessSprites
+from _game.game import Game
+from _bot.bot import Bot
 
 #LIGHT_SQ = (240, 217, 181)
 #DARK_SQ = (181, 136, 99)
-LIGHT_SQ = (230, 225, 210)  
+LIGHT_SQ = (230, 225, 210)
 DARK_SQ = (200, 190, 170)
 HIGHLIGHT_SQ = (118, 150, 86)
 PREV_SQ = (125, 135, 150)
@@ -28,7 +28,8 @@ SIDEPANEL_BG = (50, 50, 50)
 CLICK_SQ = (255, 165, 0)
 
 
-def draw_board(board: Board, origin_x: int, origin_y: int, square: int, user_color: Color):
+def draw_board(board: Board, origin_x: int, origin_y: int, square: int,
+               user_color: Color):
     """
     Draw the chess board with all tiles
 
@@ -40,8 +41,8 @@ def draw_board(board: Board, origin_x: int, origin_y: int, square: int, user_col
         user_color: The color the user is playing (affects board orientation)
     """
 
-    BORDER_1 = 0.07
-    BORDER_2 = 0.14
+    border_1 = 0.07
+    border_2 = 0.14
 
     for rank in range(8):
         for file in range(8):
@@ -55,30 +56,34 @@ def draw_board(board: Board, origin_x: int, origin_y: int, square: int, user_col
 
             x = origin_x + visual_file * square
             y = origin_y + visual_rank * square
-            fill = LIGHT_SQ if board.grid[rank][file].is_light_square else DARK_SQ
+            fill = (LIGHT_SQ if board.grid[rank][file].is_light_square
+                    else DARK_SQ)
             alt = DARK_SQ if fill == LIGHT_SQ else LIGHT_SQ
 
-            inner_1 = square * BORDER_1
-            inner_2 = square * BORDER_2
+            inner_1 = square * border_1
+            inner_2 = square * border_2
 
             if board.grid[rank][file].prev:
-                #arcade.draw_lbwh_rectangle_filled(x, y, square, square, PREV_SQ)
+                #arcade.draw_lbwh_rectangle_filled(x, y, square, square,
+                #                                  PREV_SQ)
                 alt = PREV_SQ
 
             if board.grid[rank][file].highlighted:
-                #arcade.draw_lbwh_rectangle_filled(x, y, square, square, HIGHLIGHT_SQ)
+                #arcade.draw_lbwh_rectangle_filled(x, y, square, square,
+                #                                  HIGHLIGHT_SQ)
                 alt = HIGHLIGHT_SQ
 
             if board.grid[rank][file].clicked:
-                #arcade.draw_lbwh_rectangle_filled(x, y, square, square, CLICK_SQ)
+                #arcade.draw_lbwh_rectangle_filled(x, y, square, square,
+                #                                  CLICK_SQ)
                 alt = CLICK_SQ
-            
+
             arcade.draw_lbwh_rectangle_filled(x, y, square, square, fill)
 
             #MIDDLE SQUARE
             arcade.draw_lbwh_rectangle_filled(
                 x + inner_1, y + inner_1,
-                square - 2 * inner_1, square - 2 * inner_1, 
+                square - 2 * inner_1, square - 2 * inner_1,
                 alt
             )
 
@@ -90,7 +95,8 @@ def draw_board(board: Board, origin_x: int, origin_y: int, square: int, user_col
             )
 
 
-def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: Board, settings_mode: bool):
+def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game,
+                   board: Board, settings_mode: bool):
     """
     Draw the side panel with game information
 
@@ -113,10 +119,12 @@ def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: B
 
     settings_color = C.ROYAL_BLUE
     arcade.draw_lbwh_rectangle_filled(settings_button_x, settings_button_y,
-                                      settings_button_size, settings_button_size,
+                                      settings_button_size,
+                                      settings_button_size,
                                       settings_color)
     arcade.draw_lbwh_rectangle_outline(settings_button_x, settings_button_y,
-                                       settings_button_size, settings_button_size,
+                                       settings_button_size,
+                                       settings_button_size,
                                        C.WHITE, 2)
     arcade.draw_text("⚙", x + width - settings_button_size // 2 - 10,
                      y + height - settings_button_size // 2 - 10,
@@ -124,9 +132,10 @@ def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: B
 
     if not settings_mode:
         # Current turn / game status
-        if board.stalemate == False and board.checkmate == False:
-            turn_text = "White's Turn" if game.turn == Color.WHITE else "Black's Turn"
-        elif board.stalemate == True:
+        if not board.stalemate and not board.checkmate:
+            turn_text = ("White's Turn" if game.turn == Color.WHITE
+                        else "Black's Turn")
+        elif board.stalemate:
             turn_text = "Stalemate!"
         elif board.resigned:
             turn_text = "Resignation!"
@@ -138,20 +147,20 @@ def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: B
 
         # Material differential / game result
         material_diff = board.material_differential
-        if board.checkmate == False and board.stalemate == False:
+        if not board.checkmate and not board.stalemate:
             if material_diff > 0:
                 material_msg = f"White + {material_diff}"
             elif material_diff < 0:
                 material_msg = f"Black + {abs(material_diff)}"
             else:
-                material_msg = f"Even Material"
-        elif board.checkmate == True:
+                material_msg = "Even Material"
+        elif board.checkmate:
             if board.mate_color == Color.WHITE:
-                material_msg = f"White Wins!"
+                material_msg = "White Wins!"
             else:
-                material_msg = f"Black Wins!"
+                material_msg = "Black Wins!"
         else:
-            material_msg = f"Draw :/"
+            material_msg = "Draw :/"
 
         arcade.draw_text(material_msg, x + width // 2, y + height - 140,
                          C.WHITE, 14, anchor_x="center")
@@ -170,8 +179,10 @@ def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: B
             arcade.draw_lbwh_rectangle_outline(button_x, button_y,
                                                button_width, button_height,
                                                C.WHITE, 2)
-            arcade.draw_text("NEW GAME", x + width // 2, button_y + button_height // 2,
-                            C.WHITE, 11, anchor_x="center", anchor_y="center", bold=True)
+            arcade.draw_text("NEW GAME", x + width // 2,
+                            button_y + button_height // 2,
+                            C.WHITE, 11, anchor_x="center",
+                            anchor_y="center", bold=True)
         else:
             # RESIGN BUTTON
             arcade.draw_lbwh_rectangle_filled(button_x, button_y,
@@ -180,8 +191,10 @@ def draw_sidepanel(x: int, y: int, width: int, height: int, game: Game, board: B
             arcade.draw_lbwh_rectangle_outline(button_x, button_y,
                                                button_width, button_height,
                                                C.WHITE, 2)
-            arcade.draw_text("RESIGN", x + width // 2, button_y + button_height // 2,
-                            C.WHITE, 12, anchor_x="center", anchor_y="center", bold=True)
+            arcade.draw_text("RESIGN", x + width // 2,
+                            button_y + button_height // 2,
+                            C.WHITE, 12, anchor_x="center",
+                            anchor_y="center", bold=True)
 
         # Color selection label (button is managed by UIManager)
         arcade.draw_text("User plays as:", x + width // 2, y + 80,
@@ -213,7 +226,7 @@ class GameView(arcade.View):
                                     resolution_down_scale=1.0,
                                     hard_scan=-2.0,
                                     hard_pix=-2.0,
-                                    display_warp = Vec2(0.0, 0.0),
+                                    display_warp=Vec2(0.0, 0.0),
                                     mask_dark=0.5,
                                     mask_light=1.2)
 
@@ -309,35 +322,36 @@ class GameView(arcade.View):
                 border=(60, 60, 60),
                 border_width=2),
         }
-        self.easy = UIFlatButton(text="EASY", width=120,style=easy_style)
+        self.easy = UIFlatButton(text="EASY", width=120, style=easy_style)
         self.easy.center_x = 980
         self.easy.center_y = 670
         self.manager.add(self.easy)
 
         @self.easy.event("on_click")
-        def on_click_settings(event):
+        def on_click_easy(_event):
             print("EASY")
             self.bot.set_elo(400)
             self.current_difficulty = "EASY"
 
-        self.medium = UIFlatButton(text="MEDIUM", width=120, style = medium_style)
+        self.medium = UIFlatButton(text="MEDIUM", width=120,
+                                   style=medium_style)
         self.medium.center_x = 980
         self.medium.center_y = 610
         self.manager.add(self.medium)
 
         @self.medium.event("on_click")
-        def on_click_settings(event):
+        def on_click_medium(_event):
             print("MEDIUM")
             self.bot.set_elo(1000)
             self.current_difficulty = "MEDIUM"
 
-        self.hard = UIFlatButton(text="HARD", width=120, style = hard_style)
+        self.hard = UIFlatButton(text="HARD", width=120, style=hard_style)
         self.hard.center_x = 980
         self.hard.center_y = 550
         self.manager.add(self.hard)
 
         @self.hard.event("on_click")
-        def on_click_settings(event):
+        def on_click_hard(_event):
             print("HARD")
             self.bot.set_elo(2000)
             self.current_difficulty = "HARD"
@@ -362,28 +376,36 @@ class GameView(arcade.View):
         }
 
         # White theme button
-        self.white_theme_button = UIFlatButton(text="Change WHITE Theme", width=180, style=theme_button_style)
+        self.white_theme_button = UIFlatButton(text="Change WHITE Theme",
+                                               width=180,
+                                               style=theme_button_style)
         self.white_theme_button.center_x = 980
         self.white_theme_button.center_y = 460
         self.manager.add(self.white_theme_button)
 
         @self.white_theme_button.event("on_click")
-        def _white_theme(event):
+        def _white_theme(_event):
             print("Changing WHITE Theme")
             self.sheet.next_white_theme()
-            self.sprites.build_from_board(self.board, self.square, self.origin_x, self.origin_y, self.game.user_color)
+            self.sprites.build_from_board(self.board, self.square,
+                                         self.origin_x, self.origin_y,
+                                         self.game.user_color)
 
         # Black theme button
-        self.black_theme_button = UIFlatButton(text="Change BLACK Theme", width=180, style=theme_button_style)
+        self.black_theme_button = UIFlatButton(text="Change BLACK Theme",
+                                               width=180,
+                                               style=theme_button_style)
         self.black_theme_button.center_x = 980
         self.black_theme_button.center_y = 400
         self.manager.add(self.black_theme_button)
 
         @self.black_theme_button.event("on_click")
-        def _black_theme(event):
+        def _black_theme(_event):
             print("Changing BLACK Theme")
             self.sheet.next_black_theme()
-            self.sprites.build_from_board(self.board, self.square, self.origin_x, self.origin_y, self.game.user_color)
+            self.sprites.build_from_board(self.board, self.square,
+                                         self.origin_x, self.origin_y,
+                                         self.game.user_color)
 
         # ================ COLOR SELECTION BUTTON ======================
         self.color_button_style_white = {
@@ -423,15 +445,18 @@ class GameView(arcade.View):
         }
 
         # Color selection button
-        self.color_button = UIFlatButton(text="WHITE", width=80, style=self.color_button_style_white)
+        self.color_button = UIFlatButton(text="WHITE", width=80,
+                                        style=self.color_button_style_white)
         self.color_button.center_x = 980
         self.color_button.center_y = 50
         self.manager.add(self.color_button)
 
         @self.color_button.event("on_click")
-        def _toggle_color(event):
+        def _toggle_color(_event):
             # Toggle user color
-            self.game.user_color = Color.BLACK if self.game.user_color == Color.WHITE else Color.WHITE
+            self.game.user_color = (Color.BLACK
+                                   if self.game.user_color == Color.WHITE
+                                   else Color.WHITE)
 
             # Update button text and style
             if self.game.user_color == Color.WHITE:
@@ -446,7 +471,8 @@ class GameView(arcade.View):
             self.game.turn = Color.WHITE
             self.game_started = False
             self.sprites.build_from_board(
-                self.board, self.square, self.origin_x, self.origin_y, self.game.user_color
+                self.board, self.square, self.origin_x, self.origin_y,
+                self.game.user_color
             )
 
             # If user chose black, bot makes first move
@@ -462,8 +488,8 @@ class GameView(arcade.View):
         self.white_theme_button.visible = False
         self.black_theme_button.visible = False
 
-
-    def screen_to_board_coords(self, visual_file: int, visual_rank: int) -> tuple[int, int]:
+    def screen_to_board_coords(self, visual_file: int,
+                               visual_rank: int) -> tuple[int, int]:
         """
         Convert visual screen coordinates to actual board coordinates.
 
@@ -477,7 +503,8 @@ class GameView(arcade.View):
             return (7 - visual_file, 7 - visual_rank)
         return (visual_file, visual_rank)
 
-    def board_to_screen_coords(self, board_file: int, board_rank: int) -> tuple[int, int]:
+    def board_to_screen_coords(self, board_file: int,
+                               board_rank: int) -> tuple[int, int]:
         """
         Convert actual board coordinates to visual screen coordinates.
 
@@ -492,7 +519,7 @@ class GameView(arcade.View):
         return (board_file, board_rank)
 
     def on_show_view(self):
-        """Called when this view is shown - ensures buttons are hidden on startup"""
+        """Called when this view is shown - ensures buttons are hidden"""
         self.easy.visible = False
         self.medium.visible = False
         self.hard.visible = False
@@ -501,29 +528,33 @@ class GameView(arcade.View):
 
     def on_draw(self):
         if self.filter_on:
-                # Draw our stuff into the CRT filter
-                self.crt_filter.use()
-                self.crt_filter.clear()
-                # Switch back to our window and draw the CRT filter do
-                # draw its stuff to the screen
-                draw_board(self.board, self.origin_x, self.origin_y, self.square, self.game.user_color)
-                self.sprites.draw()
-                draw_sidepanel(self.sidepanel_x, 0, self.sidepanel_width,
-                            self.window.height, self.game, self.board, self.settings_mode)
-                self.manager.draw()
+            # Draw our stuff into the CRT filter
+            self.crt_filter.use()
+            self.crt_filter.clear()
+            # Switch back to our window and draw the CRT filter do
+            # draw its stuff to the screen
+            draw_board(self.board, self.origin_x, self.origin_y,
+                      self.square, self.game.user_color)
+            self.sprites.draw()
+            draw_sidepanel(self.sidepanel_x, 0, self.sidepanel_width,
+                          self.window.height, self.game, self.board,
+                          self.settings_mode)
+            self.manager.draw()
 
-                self.window.use()
-                self.clear()
+            self.window.use()
+            self.clear()
 
-
-                # draw stretched
-                self.crt_filter.draw()
+            # draw stretched
+            self.crt_filter.draw()
 
         else:
             self.clear()
-            draw_board(self.board, self.origin_x, self.origin_y, self.square, self.game.user_color)
+            draw_board(self.board, self.origin_x, self.origin_y,
+                      self.square, self.game.user_color)
             self.sprites.draw()
-            draw_sidepanel(self.sidepanel_x, 0, self.sidepanel_width, self.window.height, self.game, self.board, self.settings_mode)
+            draw_sidepanel(self.sidepanel_x, 0, self.sidepanel_width,
+                          self.window.height, self.game, self.board,
+                          self.settings_mode)
             self.manager.draw()
 
     def on_mouse_press(self, x, y, button, modifiers):
@@ -539,11 +570,13 @@ class GameView(arcade.View):
 
         # Settings button
         settings_button_size = 35
-        settings_button_x = self.sidepanel_x + self.sidepanel_width - settings_button_size - 10
+        settings_button_x = (self.sidepanel_x + self.sidepanel_width
+                            - settings_button_size - 10)
         settings_button_y = self.window.height - settings_button_size - 10
 
-        if (settings_button_x <= x <= settings_button_x + settings_button_size and
-            settings_button_y <= y <= settings_button_y + settings_button_size):
+        if (settings_button_x <= x <= settings_button_x + settings_button_size
+                and settings_button_y <= y
+                <= settings_button_y + settings_button_size):
             # Toggle settings mode
             self.settings_mode = not self.settings_mode
 
@@ -563,20 +596,24 @@ class GameView(arcade.View):
         # Resign button
         button_width = 100
         button_height = 40
-        action_button_x = self.sidepanel_x + self.sidepanel_width // 2 - button_width // 2
+        action_button_x = (self.sidepanel_x + self.sidepanel_width // 2
+                          - button_width // 2)
         action_button_y = 200
 
-        if (action_button_x <= x <= action_button_x + button_width and
-            action_button_y <= y <= action_button_y + button_height):
+        if (action_button_x <= x <= action_button_x + button_width
+                and action_button_y <= y
+                <= action_button_y + button_height):
 
-            if self.board.checkmate or self.board.stalemate or self.board.resigned:
+            if (self.board.checkmate or self.board.stalemate
+                    or self.board.resigned):
                 # NEW GAME clicked
                 self.board.reset_board()
                 self.game.turn = Color.WHITE
                 self.game_started = False
 
                 self.sprites.build_from_board(
-                    self.board, self.square, self.origin_x, self.origin_y, self.game.user_color
+                    self.board, self.square, self.origin_x, self.origin_y,
+                    self.game.user_color
                 )
 
                 if self.game.user_color == Color.BLACK:
@@ -588,11 +625,14 @@ class GameView(arcade.View):
             else:
                 # RESIGN clicked
                 self.board.resign(self.game.user_color)
-                print(f"{self.game.user_color.name} resigned. {self.board.mate_color.name} wins!")
+                winner = self.board.mate_color.name
+                loser = self.game.user_color.name
+                print(f"{loser} resigned. {winner} wins!")
 
             return
 
-        if self.board.checkmate or self.board.stalemate or self.board.resigned:
+        if (self.board.checkmate or self.board.stalemate
+                or self.board.resigned):
             return
 
         if button == arcade.MOUSE_BUTTON_LEFT:
@@ -610,7 +650,8 @@ class GameView(arcade.View):
             if 0 <= file <= 7 and 0 <= rank <= 7:
                 tile = self.board.grid[rank][file]
 
-                if tile.has_piece() and tile.piece_here.color == self.game.user_color:
+                if (tile.has_piece()
+                        and tile.piece_here.color == self.game.user_color):
                     self.board.remove_highlights()
                     self.board.get_piece(tile.piece_here)
                     self.board.highlight_moves()
@@ -622,27 +663,32 @@ class GameView(arcade.View):
                         if len(king_moves) == 0:
 
                             #Check if anyone has moves
-                            all_moves = self.board.get_all_moves(self.game.user_color)
+                            all_moves = self.board.get_all_moves(
+                                self.game.user_color)
                             if len(all_moves) == 0:
 
                                 #Checkmate or stalemate
-                                enemy_moves = self.board.get_all_enemy_moves(self.game.user_color)
+                                enemy_moves = self.board.get_all_enemy_moves(
+                                    self.game.user_color)
 
-                                if piece.current_pos in enemy_moves: #Checkmate
-                                    print(f"{self.game.user_color.name} is in CHECKMATE")
+                                if piece.current_pos in enemy_moves:
+                                    #Checkmate
+                                    print(f"{self.game.user_color.name} is "
+                                          "in CHECKMATE")
                                     self.board.set_checkmate()
-                                    self.board.set_mate_color(self.game.user_color.opposite())
+                                    self.board.set_mate_color(
+                                        self.game.user_color.opposite())
                                     return
 
-                                else:
-                                    #Stalemate
-                                    print(f"{self.game.user_color.name} is in STALEMATE")
-                                    self.board.set_stalemate()
-                                    return
+                                #Stalemate
+                                print(f"{self.game.user_color.name} is "
+                                      "in STALEMATE")
+                                self.board.set_stalemate()
+                                return
 
                     #Check for draws
                     if self.board.check_draw():
-                        print(f"Stalemate")
+                        print("Stalemate")
                         self.board.set_stalemate()
                         return
 
@@ -690,12 +736,12 @@ class GameView(arcade.View):
                 else:
                     tile.click()
 
-
     def make_bot_move(self):
         """Make the bot's move and update the display"""
         bot_color = self.game.user_color.opposite()
         # Check if we can make a move
-        if not self.board.is_curr_pos() or self.board.checkmate or self.board.stalemate:
+        if (not self.board.is_curr_pos() or self.board.checkmate
+                or self.board.stalemate):
             return None
 
         # Get all legal moves
@@ -709,21 +755,21 @@ class GameView(arcade.View):
                 for file in range(8):
                     piece = self.board.grid[rank][file].piece_here
 
-                    if (piece and piece.color == bot_color and
-                            piece.piece_type == PieceType.KING):
+                    if (piece and piece.color == bot_color
+                            and piece.piece_type == PieceType.KING):
 
                         if piece.current_pos in all_moves:
                             print(f"{bot_color.name} is in CHECKMATE")
                             self.board.set_checkmate()
                             self.board.set_mate_color(bot_color.opposite())
                             return None
-                        else:
-                            print(f"{bot_color.name} is in STALEMATE")
-                            self.board.set_stalemate()
-                            return None
-        
+
+                        print(f"{bot_color.name} is in STALEMATE")
+                        self.board.set_stalemate()
+                        return None
+
         if self.board.check_draw():
-            print(f"stalemate from not enough pieces!")
+            print("stalemate from not enough pieces!")
             self.board.set_stalemate()
             return None
         move = self.bot.make_move(self.board, bot_color)
@@ -733,12 +779,14 @@ class GameView(arcade.View):
 
             # Rebuild sprites to show new board state
             self.sprites.build_from_board(
-                self.board, self.square, self.origin_x, self.origin_y, self.game.user_color
+                self.board, self.square, self.origin_x, self.origin_y,
+                self.game.user_color
             )
 
             # Highlight the bot's move (from and to squares)
             self.board.grid[from_pos[0]][from_pos[1]].prev_move()
             self.board.grid[to_pos[0]][to_pos[1]].prev_move()
+        return None
 
     def get_tile_from_mouse(self, x, y):
         """
@@ -769,17 +817,20 @@ class GameView(arcade.View):
         Returns:
             The sprite at that position, or None if not found
         """
-        # Convert board coordinates to visual coordinates for sprite positioning
+        # Convert board coordinates to visual coordinates for sprite
+        # positioning
         visual_file, visual_rank = self.board_to_screen_coords(file, rank)
 
         # Calculate the center of the square
-        center_x = self.origin_x + visual_file * self.square + self.square // 2
-        center_y = self.origin_y + visual_rank * self.square + self.square // 2
+        center_x = (self.origin_x + visual_file * self.square
+                   + self.square // 2)
+        center_y = (self.origin_y + visual_rank * self.square
+                   + self.square // 2)
 
         # Find sprite near this position (within half a square)
         for sprite in self.sprites.sprite_list:
-            if (abs(sprite.center_x - center_x) < self.square // 2 and
-                    abs(sprite.center_y - center_y) < self.square // 2):
+            if (abs(sprite.center_x - center_x) < self.square // 2
+                    and abs(sprite.center_y - center_y) < self.square // 2):
                 return sprite
         return None
 
@@ -808,14 +859,16 @@ class GameView(arcade.View):
         # Pawn at end of board (promotion)
         piece = self.board.grid[rank][file].get_piece_here()
         if piece and piece.piece_type == PieceType.PAWN:
-            if (rank == 7 and piece.color == Color.WHITE) or (rank == 0 and piece.color == Color.BLACK):
+            if ((rank == 7 and piece.color == Color.WHITE)
+                    or (rank == 0 and piece.color == Color.BLACK)):
                 print(f"{piece.color.name} PAWN PROMOTED!")
                 piece.promote()
                 self.board.promote(piece.color, file, rank)
 
         # Rebuild sprites to show new board state
         self.sprites.build_from_board(
-            self.board, self.square, self.origin_x, self.origin_y, self.game.user_color
+            self.board, self.square, self.origin_x, self.origin_y,
+            self.game.user_color
         )
 
         # Reset game state
@@ -870,9 +923,12 @@ class GameView(arcade.View):
                 else:
                     # Invalid move - snap back to original position
                     orig_file, orig_rank = self.drag_start_pos
-                    visual_file, visual_rank = self.board_to_screen_coords(orig_file, orig_rank)
-                    center_x = self.origin_x + visual_file * self.square + self.square // 2
-                    center_y = self.origin_y + visual_rank * self.square + self.square // 1.5
+                    visual_file, visual_rank = self.board_to_screen_coords(
+                        orig_file, orig_rank)
+                    center_x = (self.origin_x + visual_file * self.square
+                               + self.square // 2)
+                    center_y = (self.origin_y + visual_rank * self.square
+                               + self.square // 1.5)
                     self.dragging_sprite.center_x = center_x
                     self.dragging_sprite.center_y = center_y
                     self.dragging_sprite = None
@@ -881,19 +937,21 @@ class GameView(arcade.View):
                     self.drag_offset_y = 0
                     return
 
-            else:
-                # Dropped outside board - snap back
-                orig_file, orig_rank = self.drag_start_pos
-                visual_file, visual_rank = self.board_to_screen_coords(orig_file, orig_rank)
-                center_x = self.origin_x + visual_file * self.square + self.square // 2
-                center_y = self.origin_y + visual_rank * self.square + self.square // 2
-                self.dragging_sprite.center_x = center_x
-                self.dragging_sprite.center_y = center_y
-                self.dragging_sprite = None
-                self.drag_start_pos = None
-                self.drag_offset_x = 0
-                self.drag_offset_y = 0
-                return
+            # Dropped outside board - snap back
+            orig_file, orig_rank = self.drag_start_pos
+            visual_file, visual_rank = self.board_to_screen_coords(
+                orig_file, orig_rank)
+            center_x = (self.origin_x + visual_file * self.square
+                       + self.square // 2)
+            center_y = (self.origin_y + visual_rank * self.square
+                       + self.square // 2)
+            self.dragging_sprite.center_x = center_x
+            self.dragging_sprite.center_y = center_y
+            self.dragging_sprite = None
+            self.drag_start_pos = None
+            self.drag_offset_x = 0
+            self.drag_offset_y = 0
+            return
 
         self.dragging_sprite = None
         self.drag_start_pos = None
@@ -902,7 +960,6 @@ class GameView(arcade.View):
 
     def wait(self):
         """ Function waits a second prior to making bot move """
-        counter = 1
         start = time.time()
         while time.time() < start + 2:
             pass
@@ -926,7 +983,9 @@ class GameView(arcade.View):
             self.board.current_index -= 1
             move = self.board.move_history[self.board.current_index]
             self.board.load_fen(move["FEN"])
-            self.sprites.build_from_board(self.board, self.square, self.origin_x, self.origin_y, self.game.user_color)
+            self.sprites.build_from_board(self.board, self.square,
+                                         self.origin_x, self.origin_y,
+                                         self.game.user_color)
 
     def show_next_move(self):
         ''' Goes forward one move in history '''
@@ -934,4 +993,6 @@ class GameView(arcade.View):
             self.board.current_index += 1
             move = self.board.move_history[self.board.current_index]
             self.board.load_fen(move["FEN"])
-            self.sprites.build_from_board(self.board, self.square, self.origin_x, self.origin_y, self.game.user_color)
+            self.sprites.build_from_board(self.board, self.square,
+                                         self.origin_x, self.origin_y,
+                                         self.game.user_color)

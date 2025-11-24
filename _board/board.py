@@ -18,11 +18,13 @@ class Board:
     """
 
     def __init__(self) -> None:
-        """Initialize the chess board with tiles and pieces in starting positions."""
+        """Initialize the chess board with tiles and pieces in starting
+        positions."""
         # nested list format
         # creates 8 lists for each row, each with 8 tile objects
         # initialized to none, replaced by Tile objects later
-        self.grid: List[List[Tile]] = [[None for _ in range(8)] for _ in range(8)]
+        self.grid: List[List[Tile]] = [[None for _ in range(8)]
+                                       for _ in range(8)]
         self.selected_piece = None
         self.checking_for_checks = False
         self.en_passant_target = None
@@ -45,7 +47,8 @@ class Board:
         self.initialize_pieces()
 
     def initialize_pieces(self):
-        """Initialize and populate all pieces to starting locations on the board"""
+        """Initialize and populate all pieces to starting locations on the
+        board"""
         # Pawns
         for file in range(8):
             self.grid[1][file].piece_here = Pawn(Color.WHITE, (file, 1))
@@ -78,7 +81,7 @@ class Board:
         self.grid[7][5].piece_here = Bishop(Color.BLACK, (5, 7))
 
         #Sets initial board layout in previous move shower
-        self.move_history.append( {
+        self.move_history.append({
             "Piece": None,
             "From": None,
             "To": None,
@@ -104,8 +107,10 @@ class Board:
         if captured_piece:
             # very piece_value is enum, need the integer .value
             piece_val = captured_piece.piece_value.value
-            # print(f"DEBUG: Captured {captured_piece.color} {captured_piece.piece_type} worth {piece_val}")
-            # print(f"DEBUG: Material Differential Before: {self.material_differential}")
+            # print(f"DEBUG: Captured {captured_piece.color}
+            # {captured_piece.piece_type} worth {piece_val}")
+            # print(f"DEBUG: Material Differential Before:
+            # {self.material_differential}")
             if captured_piece.color == Color.WHITE:
                 self.material_differential -= piece_val
                 print("WHITE captured")
@@ -113,7 +118,8 @@ class Board:
                 self.material_differential += piece_val
                 print("BLACK captured")
 
-            # print(f"DEBUG: Material Differential After: {self.material_differential}")
+            # print(f"DEBUG: Material Differential After:
+            # {self.material_differential}")
             # Actually call the delete method
             captured_piece.delete()
 
@@ -160,7 +166,8 @@ class Board:
 
         # Check if enemy is in check after move
         piece = self.selected_piece
-        enemy_color = Color.BLACK if piece.color == Color.WHITE else Color.WHITE
+        enemy_color = (Color.BLACK if piece.color == Color.WHITE
+                      else Color.WHITE)
 
         if self.check_for_checks(enemy_color):
             print(f"{enemy_color.name} is in check!")
@@ -169,7 +176,7 @@ class Board:
               f"{before_move} to {(file, rank)}")
 
         #Add move to the move history list
-        self.move_history.append( {
+        self.move_history.append({
             "Piece": piece,
             "From": before_move,
             "To": (file, rank),
@@ -194,6 +201,7 @@ class Board:
         self.stalemate = True
 
     def set_mate_color(self, color: Color):
+        """Set the color of the player who won by checkmate"""
         self.mate_color = color
 
     def highlight_moves(self):
@@ -209,9 +217,10 @@ class Board:
         for rank in range(8):
             for file in range(8):
                 self.grid[rank][file].clear_highlight()
-    
+
     def remove_prev(self):
-        """Removes all highlighted tiles from the previously made move on the grid"""
+        """Removes all highlighted tiles from the previously made move on
+        the grid"""
         for rank in range(8):
             for file in range(8):
                 self.grid[rank][file].clear_prev()
@@ -237,7 +246,7 @@ class Board:
                     for move in curr:
                         if move not in all_moves:
                             all_moves.append(move)
-        
+
         return all_moves
 
     def get_all_enemy_moves(self, color: Color):
@@ -276,8 +285,8 @@ class Board:
         for rank in range(8):
             for file in range(8):
                 piece = self.grid[rank][file].piece_here
-                if (piece and piece.color == color and
-                        piece.piece_type.name == "KING"):
+                if (piece and piece.color == color
+                        and piece.piece_type.name == "KING"):
                     return (file, rank)
 
         return None
@@ -308,7 +317,8 @@ class Board:
         finally:
             self.checking_for_checks = False
 
-    def check_if_move_into_check(self, piece: Piece, new_pos: tuple[int, int]):
+    def check_if_move_into_check(self, piece: Piece,
+                                 new_pos: tuple[int, int]):
         """
         Check if moving a piece to a new position would put the king in check
 
@@ -365,7 +375,8 @@ class Board:
         Args:
             square: The position to check (file, rank)
             enemy_moves: List of all enemy move positions
-            visited_squares: Set of already visited squares to prevent recursion
+            visited_squares: Set of already visited squares to prevent
+                           recursion
         Returns:
             True if square is under attack, False otherwise
         """
@@ -420,7 +431,8 @@ class Board:
         self.checkmate = True
         # Winner is the opposite color
         self.mate_color = resigning_color.opposite()
-        print(f"{resigning_color.name} resigned. {self.mate_color.name} wins!")
+        print(f"{resigning_color.name} resigned. {self.mate_color.name} "
+              "wins!")
 
     def reset_board(self):
         """
@@ -466,18 +478,19 @@ class Board:
             print(row_str)
         print()
 
-    """
-    Modified board_state to accept optional active_color parameter.
-    Returns full FEN string including turn indicator, castling rights, en passant, etc.
-    If no active_color provided, returns just piece positions (backward compatible).
-    """
     def board_state(self, active_color: Color = None):
         """
         Generate FEN (Forsyth-Edwards Notation) string of current _board state
 
+        Modified board_state to accept optional active_color parameter.
+        Returns full FEN string including turn indicator, castling rights,
+        en passant, etc. If no active_color provided, returns just piece
+        positions (backward compatible).
+
         Args:
-            active_color: Optional - Whose turn it is (Color.WHITE or Color.BLACK)
-                         If provided, returns full FEN. If None, returns only positions.
+            active_color: Optional - Whose turn it is (Color.WHITE or
+                         Color.BLACK). If provided, returns full FEN. If None,
+                         returns only positions.
         Returns:
             FEN string representing the _board position
         """
@@ -528,7 +541,8 @@ class Board:
             halfmove = 0
             fullmove = 1
 
-            fen_string = f"{fen_string} {turn_char} {castling} {en_passant} {halfmove} {fullmove}"
+            fen_string = (f"{fen_string} {turn_char} {castling} "
+                         f"{en_passant} {halfmove} {fullmove}")
 
         return fen_string
 
@@ -549,7 +563,9 @@ class Board:
                 if not piece:
                     continue
 
-                value = piece.piece_value.value if hasattr(piece.piece_value, "value") else piece.piece_value
+                value = (piece.piece_value.value
+                        if hasattr(piece.piece_value, "value")
+                        else piece.piece_value)
 
                 if piece.color == Color.WHITE:
                     white_total += value
@@ -606,7 +622,10 @@ class Board:
 
                     #Handle has_moved for pawn
                     if isinstance(piece, Pawn):
-                        if (piece.color == Color.WHITE and rank_index != 1) or (piece.color == Color.BLACK and rank_index != 6):
+                        if ((piece.color == Color.WHITE
+                                and rank_index != 1)
+                                or (piece.color == Color.BLACK
+                                    and rank_index != 6)):
                             piece.has_moved = True
 
                     #TODO - implement has_moved for rook and king as well
@@ -615,13 +634,16 @@ class Board:
                     file_index += 1
 
         #Calculate previous material difference
-        self.material_differential =self.calculate_material()
+        self.material_differential = self.calculate_material()
 
-    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
-        """Handle mouse release events (placeholder for future implementation)"""
+    def on_mouse_release(self, x: float, y: float, button: int,
+                        modifiers: int):
+        """Handle mouse release events (placeholder for future
+        implementation)"""
 
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
-        """Handle mouse motion events (placeholder for future implementation)"""
+        """Handle mouse motion events (placeholder for future
+        implementation)"""
 
     def is_curr_pos(self):
         """ Check if board displays current move """
@@ -632,14 +654,19 @@ class Board:
         Create a new instance of a queen wherever a pawn is promoted
 
         Args:
-            Rank: the rank of the pawn/queen
-            File: the file of the pawn/queen
+            color: The color of the piece
+            file: The file of the pawn/queen
+            rank: The rank of the pawn/queen
         """
         self.grid[rank][file].piece_here = Queen(color, (file, rank))
 
     def check_draw(self):
         """
-        Check to see if enough pieces are left on the board to complete a checkmate; if not, sets draw to true.
+        Check to see if enough pieces are left on the board to complete a
+        checkmate; if not, sets draw to true.
+
+        Returns:
+            1 if draw condition met, 0 otherwise
         """
         piece_count = 0
 
@@ -652,13 +679,12 @@ class Board:
 
                     piece_count += 1
 
-                    if (piece.piece_type == PieceType.ROOK or
-                        piece.piece_type == PieceType.QUEEN or 
-                        piece.piece_type == PieceType.PAWN):
-
+                    if piece.piece_type in (PieceType.ROOK,
+                                           PieceType.QUEEN,
+                                           PieceType.PAWN):
                         return 0
-                
+
         if piece_count <= 4:
             return 1
 
-        
+        return 0

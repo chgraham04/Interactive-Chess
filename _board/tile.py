@@ -72,11 +72,13 @@ class Tile:
     def clear_prev(self):
         """ Remove previous move highlight from this tile"""
         self.prev = False
-    
+
     def click(self):
+        """Mark this tile as clicked for user interface"""
         self.clicked = True
-    
+
     def clear_click(self):
+        """Remove clicked marking from this tile"""
         self.clicked = False
 
     def get_piece_here(self):
